@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TiDB Outreach Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#0d1117] text-[#94a3b8] font-sans min-h-screen relative selection:bg-[#ef4444]/30 selection:text-white overflow-x-hidden">
+
+  <!-- Context Modal/Drawer Overlay -->
+  <div id="contextModalOverlay" class="fixed inset-0 bg-[#000000]/60 backdrop-blur-sm z-40 hidden flex justify-end">
+    <!-- Drawer -->
+    <aside id="contextDrawer" class="w-[480px] h-full bg-[#0b0f14] border-l border-white/[0.06] flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl">
+      <div class="px-6 py-5 border-b border-white/[0.06] flex justify-between items-center bg-[#161b22]">
+        <h2 class="font-bold text-white tracking-wide flex items-center">
+          <i data-lucide="settings-2" class="w-4 h-4 mr-2 text-[#94a3b8]"></i>
+          Context Settings
+        </h2>
+        <button id="closeContextBtn" class="text-[#64748b] hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+        <div class="space-y-2">
+          <label for="gtmPlaybook" class="block text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">GTM Playbook</label>
+          <textarea id="gtmPlaybook" class="w-full bg-[#1e293b] text-[#94a3b8] font-mono text-[13px] rounded-[8px] p-4 border border-white/[0.06] focus:border-[#ef4444]/50 focus:outline-none transition-colors h-48 resize-none" placeholder="Paste go-to-market playbook notes..."></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <label for="battleCard" class="block text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">Competitive Battle Card</label>
+          <textarea id="battleCard" class="w-full bg-[#1e293b] text-[#94a3b8] font-mono text-[13px] rounded-[8px] p-4 border border-white/[0.06] focus:border-[#ef4444]/50 focus:outline-none transition-colors h-48 resize-none" placeholder="Paste competitive analysis notes..."></textarea>
+        </div>
+      </div>
+
+      <div class="p-6 border-t border-white/[0.06] bg-[#161b22] flex items-center justify-between">
+        <button id="saveContextBtn" class="bg-[#1e293b] hover:bg-[#334155] text-white border border-white/[0.06] px-5 py-2 rounded-[8px] font-medium text-[13px] transition-colors flex items-center">
+          <i data-lucide="save" class="w-4 h-4 mr-2"></i> Save Settings
+        </button>
+        <span id="saveContextStatus" class="text-emerald-400 text-[12px] font-medium opacity-0 transition-opacity">Saved successfully</span>
+      </div>
+    </aside>
+  </div>
+
+  <main class="max-w-[1200px] mx-auto w-full px-6 py-12">
+    
+    <header class="flex items-center justify-between mb-10 pb-6 border-b border-white/[0.06]">
+      <div>
+        <h1 class="font-['JetBrains_Mono'] text-4xl font-bold text-white tracking-tight">
+          TiDB Outreach <span class="text-[#ef4444]">Generator</span>
+        </h1>
+        <p class="text-[14px] mt-2 text-[#64748b]">AI-powered hyper-personalized cold outreach engine.</p>
+      </div>
+      <div>
+        <button id="openContextBtn" class="flex items-center bg-[#161b22] hover:bg-[#1e293b] border border-white/[0.06] text-[#94a3b8] hover:text-white px-4 py-2 rounded-[8px] text-[13px] font-medium transition-colors">
+          <i data-lucide="database" class="w-4 h-4 mr-2"></i>
+          Context Sources
+        </button>
+      </div>
+    </header>
+
+    <div class="space-y-[20px] max-w-[1200px] mx-auto">
+      
+      <!-- Input Card -->
+      <section class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px]">
+        <div class="flex items-center mb-6">
+          <div class="w-8 h-8 rounded-[8px] bg-[#1e293b] border border-white/[0.06] flex items-center justify-center mr-3">
+             <i data-lucide="target" class="w-4 h-4 text-[#94a3b8]"></i>
+          </div>
+          <h2 class="text-white font-semibold text-[15px]">Target Lead Profile</h2>
+        </div>
+
+        <form id="leadForm">
+          <div class="space-y-[20px]">
+             <div class="space-y-2">
+               <label class="block text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">LinkedIn Profile URL</label>
+               <input type="url" id="linkedinUrl" class="w-full bg-[#1e293b] border border-white/[0.06] rounded-[8px] px-4 py-3 text-[14px] text-white focus:border-[#ef4444]/50 focus:outline-none transition-colors" placeholder="e.g., https://www.linkedin.com/in/janesmith/" required>
+             </div>
+             <div class="space-y-2">
+               <label class="block text-[11px] font-semibold text-[#64748b] uppercase tracking-wider flex justify-between items-center">
+                  Additional Notes
+                  <span class="normal-case opacity-70 ml-1 font-normal text-[#94a3b8]">(Optional contexts or triggers)</span>
+               </label>
+               <input type="text" id="extraNotes" class="w-full bg-[#1e293b] border border-white/[0.06] rounded-[8px] px-4 py-3 text-[14px] text-white focus:border-[#ef4444]/50 focus:outline-none transition-colors" placeholder="Recently raised Series B, using PostgreSQL...">
+             </div>
+          </div>
+          <div class="mt-[24px]">
+             <button type="submit" id="generateBtn" class="w-full bg-[#ef4444] hover:brightness-110 text-white font-medium py-[12px] px-6 rounded-[8px] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="btnText">Analyze & Generate Payload</span>
+                <i id="btnIcon" data-lucide="zap" class="w-4 h-4 ml-2"></i>
+             </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Skeleton Loading State -->
+      <section id="skeletonSection" class="hidden">
+        <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] mb-[20px] flex items-center justify-center animate-pulse h-[80px]">
+           <i data-lucide="search" class="w-5 h-5 text-[#64748b] mr-3 animate-bounce"></i>
+           <span class="text-[#94a3b8] text-[14px] font-medium" id="loadingPhaseText">Connecting to Search grounding & scraping LinkedIn signals...</span>
+        </div>
+        <div class="grid grid-cols-2 gap-[20px] animate-pulse">
+           <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] h-[220px]">
+             <div class="flex justify-between items-center mb-6">
+                <div class="h-4 bg-[#1e293b] rounded-[4px] w-[80px]"></div>
+                <div class="h-6 w-6 bg-[#1e293b] rounded-[4px]"></div>
+             </div>
+             <div class="space-y-3">
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-full"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-5/6"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-4/5"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-2/3"></div>
+             </div>
+           </div>
+           <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] h-[220px]">
+             <div class="flex justify-between items-center mb-6">
+                <div class="h-4 bg-[#1e293b] rounded-[4px] w-[80px]"></div>
+                <div class="h-6 w-6 bg-[#1e293b] rounded-[4px]"></div>
+             </div>
+             <div class="space-y-3">
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-full"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-11/12"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-5/6"></div>
+                <div class="h-3 bg-[#1e293b] rounded-[4px] w-3/4"></div>
+             </div>
+           </div>
+        </div>
+      </section>
+
+      <!-- Output Section -->
+      <section id="outputSection" class="hidden space-y-[20px]">
+        <div class="grid grid-cols-2 gap-[20px]">
+           <!-- LinkedIn Output -->
+           <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] flex flex-col">
+              <div class="flex justify-between items-center border-b border-white/[0.06] pb-4 mb-4">
+                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(59,130,246,0.15)] text-[#3b82f6] uppercase tracking-wider">
+                   LinkedIn
+                 </span>
+                 <button class="copy-btn text-[#64748b] hover:text-white bg-[#1e293b] border border-white/[0.06] p-1.5 rounded-[6px] transition-colors flex items-center justify-center relative" data-target="linkedinOut" title="Copy">
+                   <i data-lucide="clipboard" class="w-4 h-4"></i>
+                   <div class="copy-feedback absolute -top-8 bg-[#1e293b] border border-white/[0.06] text-white text-[10px] uppercase font-bold px-2 py-1 rounded opacity-0 transition-opacity pointer-events-none">Copied</div>
+                 </button>
+              </div>
+              <div class="flex-1 text-[#e2e8f0] text-[14px] leading-relaxed">
+                 <div id="linkedinOut" class="whitespace-pre-wrap outline-none" contenteditable="true"></div>
+              </div>
+           </div>
+
+           <!-- Email Output -->
+           <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] flex flex-col">
+              <div class="flex justify-between items-center border-b border-white/[0.06] pb-4 mb-4">
+                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(239,68,68,0.15)] text-[#ef4444] uppercase tracking-wider">
+                   Email
+                 </span>
+                 <button class="copy-btn text-[#64748b] hover:text-white bg-[#1e293b] border border-white/[0.06] p-1.5 rounded-[6px] transition-colors flex items-center justify-center relative" data-target="emailOutContainer" title="Copy">
+                   <i data-lucide="clipboard" class="w-4 h-4"></i>
+                   <div class="copy-feedback absolute -top-8 bg-[#1e293b] border border-white/[0.06] text-white text-[10px] uppercase font-bold px-2 py-1 rounded opacity-0 transition-opacity pointer-events-none">Copied</div>
+                 </button>
+              </div>
+              <div class="flex-1 text-[#e2e8f0] text-[14px] leading-relaxed">
+                 <div id="emailOutContainer" class="outline-none" contenteditable="true">
+                   <div class="mb-4">
+                     <span class="text-[11px] text-[#64748b] font-semibold uppercase tracking-wider">Subject:</span>
+                     <div id="emailSubject" class="font-semibold text-white mt-1"></div>
+                   </div>
+                   <div id="emailOut" class="whitespace-pre-wrap"></div>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        <!-- Notes -->
+        <details class="bg-[#161b22] border border-white/[0.06] rounded-[12px] group" open>
+           <summary class="px-[24px] py-[16px] cursor-pointer font-medium text-[13px] text-white list-none flex items-center select-none hover:bg-[#1e293b] transition-colors rounded-[12px]">
+              <i data-lucide="chevron-right" class="w-4 h-4 mr-3 text-[#64748b] group-open:rotate-90 transition-transform"></i>
+              Execution Strategy (Personalization Logic)
+           </summary>
+           <div class="px-[24px] pb-[24px] pt-2 border-t border-white/[0.06]">
+              <ul id="notesOut" class="space-y-3 text-[13px] text-[#94a3b8] leading-relaxed ml-2"></ul>
+           </div>
+        </details>
+      </section>
+
+      <div class="h-12"></div> <!-- spacer -->
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
