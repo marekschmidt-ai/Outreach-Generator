@@ -18,39 +18,64 @@ document.addEventListener('DOMContentLoaded', () => {
   const outputSection = document.getElementById('outputSection');
   const skeletonSection = document.getElementById('skeletonSection');
   
+  const whyTidbOut = document.getElementById('whyTidbOut');
   const linkedinOut = document.getElementById('linkedinOut');
   const emailSubject = document.getElementById('emailSubject');
   const emailOut = document.getElementById('emailOut');
+  const callScriptOut = document.getElementById('callScriptOut');
   const notesOut = document.getElementById('notesOut');
   
   const copyButtons = document.querySelectorAll('.copy-btn');
 
-  const defaultGTM = `### General Positioning
+  const defaultGTM = `# Unified Knowledge Base: TiDB Cloud as an Agentic Data Foundation
 
-**TiDB's Top 5 Value Propositions**
-1.  **Limitless Horizontal Scalability (No Manual Sharding):** TiDB separates compute and storage, automatically sharding data into chunks (Regions) across nodes. You can scale writes and reads infinitely with zero application rewrites.
-2.  **True HTAP (Real-Time Analytics):** The TiFlash columnar engine creates a real-time replica of transactional data. Analytics route to TiFlash automatically, giving you "Snowflake built-in for free" with zero ETL and zero impact on live transactions.
-3.  **MySQL Compatibility:** TiDB speaks the MySQL 5.7/8.0 wire protocol, acting as a drop-in replacement that allows teams to keep their existing drivers, ORMs, and tools while unlocking distributed scale.
-4.  **Instant Database Branching & Dev Velocity:** Through TiDB Cloud, developers can spawn a full-scale clone of production data in seconds using copy-on-write technology, accelerating CI/CD testing by 10x.
-5.  **Built-in High Availability & Cloud Agnosticism:** Using the Multi-Raft consensus algorithm, TiDB guarantees zero data loss (RPO=0) and sub-30 second failovers (RTO < 30s). It deploys natively on AWS, GCP, Azure, or on-premise Kubernetes, ensuring zero vendor lock-in.
+## 1. Executive Summary: The AI Data Challenge
+Current AI infrastructure is suffering from the "Memory Wall." While LLMs have become highly capable, the data systems feeding them are fragmented. Engineering teams spend ~70% of their time on "data plumbing"—synchronizing data between transactional databases (Postgres), vector stores (Pinecone), and analytical engines (Snowflake). This leads to:
+* **The Agentic Tax:** High costs and complexity from managing multiple siloed services.
+* **Data Stale-ness:** Lag between a real-world event and its availability for AI reasoning.
+* **Context Fragmentation:** Agents cannot correlate real-time telemetry with historical trends or semantic context.
 
-**Best Industries and Use Cases**
-*   **Target Industries:** Fintech & Banking, eCommerce & Retail, Gaming, SaaS, and Web3.
-*   **Top Use Cases:**
-    *   **The "Viral Growth" App:** Handling massive, sudden spikes in write throughput (e.g., game launches, Black Friday) where standard RDS/Aurora would choke.
-    *   **Real-Time Operational Intelligence:** Fraud detection, live leaderboards, and "360-degree customer views" that require complex analytical joins on up-to-the-second transactional data.
-    *   **MySQL Modernization:** Companies hitting the vertical scaling wall of MySQL 5.7/8.0 and desperate to avoid manual application sharding.
-    *   **GenAI / AI Agents:** Building RAG applications natively in the MySQL ecosystem using TiDB's built-in Vector Search, avoiding the need for a separate vector database.
+**The Solution:** TiDB Cloud provides a Unified Agentic Data Foundation, combining OLTP, OLAP, and Vector search into a single, serverless, "Git-like" database environment.
 
-**Common Objections and How to Handle Them**
-*   **Objection: "Amazon Aurora scales well enough for us."**
-    *   *Rebuttal:* Aurora is great for reads, but it hits a hard "brick wall" for writes because it relies on a single primary node (max ~20k QPS). Ask how their team currently handles long-running analytical queries, schema changes (which lock Aurora tables), and if they are tired of paying for external ETL pipelines.
-*   **Objection: "We are heavily invested in Postgres, not MySQL."**
-    *   *Rebuttal:* Acknowledge the ecosystem difference, but pitch TiDB for their *next* high-growth microservice or GenAI app. Highlight that TiDB's native HTAP and Vector Search capabilities allow them to ship AI features faster without managing a separate vector database or data warehouse.
-*   **Objection: "Distributed databases are too complex to manage."**
-    *   *Rebuttal:* Emphasize **TiDB Cloud** (Serverless or Dedicated). TiDB Serverless handles automatic scaling up and down to zero, abstracting away all infrastructure management. For migrations, PingCAP provides automated tools (TiDB Lightning, Data Migration) to sync data with zero downtime.
-*   **Objection: "TiDB has slightly higher latency than a local MySQL instance."**
-    *   *Rebuttal:* Own it. Explain that this is the "price of infinity." A local MySQL is fast until it runs out of CPU and crashes. TiDB introduces a tiny network hop (~5-15ms) to fetch a global timestamp, but it maintains that exact same stable latency whether you have 100 users or 10 million users.`;
+## 2. Technical Architecture & Core Features
+
+### A. Unified Multi-Modal Engine
+TiDB eliminates the need for multiple databases by integrating three core capabilities into one cluster:
+* **Transactional (OLTP):** High-concurrency ACID-compliant storage for session states and device telemetry.
+* **Analytical (OLAP/HTAP):** Real-time analysis of historical data using a columnar storage engine (TiFlash) without impacting transactional performance.
+* **Vector Search:** Native storage and indexing of embeddings, allowing agents to perform semantic searches directly alongside SQL queries.
+
+### B. Agent-First Features
+* **Serverless Branching:** Allows an agent to instantly "fork" a production database into a sandbox. Agents can test schema changes or run complex simulations without affecting the live environment.
+* **Scale-to-Zero & RU Metering:** Using "Request Units" (RU), the system scales compute based on actual demand. This is critical for AI apps where agent activity is often "spiky."
+* **Model Context Protocol (MCP):** A standardized interface that allows AI agents to "talk" to the database natively, reducing the need for custom middleware.
+
+### C. The 3-Tier Memory Model for Agents
+To act autonomously, agents require three types of memory, all hosted in TiDB:
+* **Short-Term:** Current session variables and immediate task state.
+* **Mid-Term:** Checkpoints of reasoning paths and recent logs.
+* **Long-Term:** The "Fleet Memory"—historical patterns, user preferences, and global knowledge graphs.
+
+## 3. Real-World Implementation (IoT Case Study)
+The documents highlight a deployment for an EV Charging Network, demonstrating how this foundation handles high-scale, "noisy" IoT data:
+* **Ingestion:** 1,300+ messages/sec across 20,000+ devices with 99.9% availability.
+* **Automated Vectorization:** Uses TiCDC (Change Data Capture) to monitor telemetry. When an anomaly is detected, a background process automatically generates a vector embedding and stores it in the Vector engine.
+* **Autonomous Diagnostics:** When a charger fails, an agent performs a "Hybrid Search":
+  * **SQL:** "What is the current voltage of Charger X?"
+  * **Vector:** "Find the top 3 similar failure patterns in our historical Outage Catalog."
+  * **Analysis:** "Compare today’s performance to the monthly average."
+
+## 4. Business & Engineering Impact
+* **TCO Reduction:** Consolidating the stack leads to a 65%–75% reduction in Total Cost of Ownership by removing the need for ETL tools and multiple licenses.
+* **Development Speed:** Teams report a 3x faster Go-To-Market (GTM) because they spend less time on infrastructure and more on agent logic.
+* **Enhanced Reliability:** Unified security policies, SOC 2 compliance, and built-in "Safety Guardrails" prevent agents from executing destructive commands (e.g., automated blocks for DROP TABLE).
+
+## 5. Summary Table for App Logic
+* **HTAP Engine (Hybrid Row/Columnar Storage):** Real-time reasoning on fresh data.
+* **Native Vector (Semantic search + SQL):** Eliminates external vector DB latency.
+* **Branching (Instant DB Cloning):** Risk-free hypothesis testing.
+* **RU Billing (Consumption-based pricing):** Cost-efficient scaling for agent fleets.
+* **TiCDC (Real-time event streaming):** Automates the embedding pipeline.`;
 
   const defaultBattleCard = `**CockroachDB**
 *   **What they do:** A cloud-agnostic, distributed SQL database compatible with PostgreSQL, designed for global scale and extreme survivability.
@@ -122,8 +147,22 @@ document.addEventListener('DOMContentLoaded', () => {
 *   **Best TiDB talking points against them:** "Cassandra might be faster for pure ingestion, but you lose SQL joins and consistency. TiDB gives you massive throughput with strict ACID guarantees, allowing you to run complex real-time analytics (OLAP) on your live data".
 *   **Typical tech stack signals:** Use cases requiring massive ingest speed where consistency is optional, such as IoT sensor logs or chat history.`;
 
-  gtmPlaybook.value = localStorage.getItem('tidb_gtmPlaybook') || defaultGTM;
-  battleCard.value = localStorage.getItem('tidb_battleCard') || defaultBattleCard;
+  const loadContext = async () => {
+    try {
+      const res = await fetch('/api/context');
+      const data = await res.json();
+      if (data.gtmPlaybook) gtmPlaybook.value = data.gtmPlaybook;
+      else gtmPlaybook.value = localStorage.getItem('tidb_gtmPlaybook_v2') || defaultGTM;
+      
+      if (data.battleCard) battleCard.value = data.battleCard;
+      else battleCard.value = localStorage.getItem('tidb_battleCard_v2') || defaultBattleCard;
+    } catch (err) {
+      console.error('Failed to load context.json, relying on local cache', err);
+      gtmPlaybook.value = localStorage.getItem('tidb_gtmPlaybook_v2') || defaultGTM;
+      battleCard.value = localStorage.getItem('tidb_battleCard_v2') || defaultBattleCard;
+    }
+  };
+  loadContext();
 
   const openDrawer = () => {
     contextModalOverlay.classList.remove('hidden');
@@ -146,15 +185,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === contextModalOverlay) closeDrawer();
   });
 
-  saveContextBtn.addEventListener('click', () => {
-    localStorage.setItem('tidb_gtmPlaybook', gtmPlaybook.value);
-    localStorage.setItem('tidb_battleCard', battleCard.value);
-    
-    saveContextStatus.classList.remove('opacity-0');
-    setTimeout(() => {
-      saveContextStatus.classList.add('opacity-0');
-      setTimeout(closeDrawer, 300); // auto close on save
-    }, 1000);
+  saveContextBtn.addEventListener('click', async () => {
+    try {
+      await fetch('/api/context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gtmPlaybook: gtmPlaybook.value, battleCard: battleCard.value })
+      });
+      // also save to localStorage as a backup
+      localStorage.setItem('tidb_gtmPlaybook_v2', gtmPlaybook.value);
+      localStorage.setItem('tidb_battleCard_v2', battleCard.value);
+      
+      saveContextStatus.classList.remove('opacity-0');
+      setTimeout(() => {
+        saveContextStatus.classList.add('opacity-0');
+        setTimeout(closeDrawer, 300); // auto close on save
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to save context to server:', err);
+    }
   });
 
   const loadingPhaseText = document.getElementById('loadingPhaseText');
@@ -182,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
 
     const payload = {
+      companyName: document.getElementById('companyName').value,
       linkedinUrl: document.getElementById('linkedinUrl').value,
       extraNotes: document.getElementById('extraNotes').value,
       gtmPlaybook: gtmPlaybook.value,
@@ -201,9 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
       
+      whyTidbOut.textContent = data.why_tidb || 'No justification generated.';
       linkedinOut.textContent = data.linkedin_message || 'No LinkedIn message generated.';
       emailSubject.textContent = data.email_subject || 'No subject generated.';
       emailOut.textContent = data.email_body || 'No email body generated.';
+      callScriptOut.textContent = data.call_script || 'No call script generated.';
       
       notesOut.innerHTML = '';
       if (data.personalization_notes && data.personalization_notes.length > 0) {

@@ -79,6 +79,10 @@
         <form id="leadForm">
           <div class="space-y-[20px]">
              <div class="space-y-2">
+               <label class="block text-[11px] font-semibold text-[#ef4444] uppercase tracking-wider">Target Company (Required)</label>
+               <input type="text" id="companyName" class="w-full bg-[#1e293b] border border-white/[0.06] rounded-[8px] px-4 py-3 text-[14px] text-white focus:border-[#ef4444]/50 focus:outline-none transition-colors" placeholder="e.g., Acme Cloud Corp" required>
+             </div>
+             <div class="space-y-2">
                <label class="block text-[11px] font-semibold text-[#64748b] uppercase tracking-wider">LinkedIn Profile URL</label>
                <input type="url" id="linkedinUrl" class="w-full bg-[#1e293b] border border-white/[0.06] rounded-[8px] px-4 py-3 text-[14px] text-white focus:border-[#ef4444]/50 focus:outline-none transition-colors" placeholder="e.g., https://www.linkedin.com/in/janesmith/" required>
              </div>
@@ -135,6 +139,20 @@
 
       <!-- Output Section -->
       <section id="outputSection" class="hidden space-y-[20px]">
+        
+        <!-- Why TiDB Section -->
+        <div class="bg-[#161b22] border border-[#ef4444]/30 rounded-[12px] p-[24px] relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-[#ef4444]"></div>
+          <div class="flex justify-between items-center border-b border-white/[0.06] pb-4 mb-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(239,68,68,0.15)] text-[#ef4444] uppercase tracking-wider">
+              Why TiDB / Strategic Angle
+            </span>
+          </div>
+          <div class="text-[#e2e8f0] text-[14px] leading-relaxed font-medium">
+             <div id="whyTidbOut" class="whitespace-pre-wrap outline-none" contenteditable="true"></div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-[20px]">
            <!-- LinkedIn Output -->
            <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px] flex flex-col">
@@ -173,6 +191,22 @@
                  </div>
               </div>
            </div>
+        </div>
+
+        <!-- Call Script Section -->
+        <div class="bg-[#161b22] border border-white/[0.06] rounded-[12px] p-[24px]">
+          <div class="flex justify-between items-center border-b border-white/[0.06] pb-4 mb-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[rgba(16,185,129,0.15)] text-[#10b981] uppercase tracking-wider">
+              Call Script
+            </span>
+            <button class="copy-btn text-[#64748b] hover:text-white bg-[#1e293b] border border-white/[0.06] p-1.5 rounded-[6px] transition-colors flex items-center justify-center relative" data-target="callScriptOut" title="Copy">
+              <i data-lucide="clipboard" class="w-4 h-4"></i>
+              <div class="copy-feedback absolute -top-8 bg-[#1e293b] border border-white/[0.06] text-white text-[10px] uppercase font-bold px-2 py-1 rounded opacity-0 transition-opacity pointer-events-none">Copied</div>
+            </button>
+          </div>
+          <div class="text-[#e2e8f0] text-[14px] leading-relaxed">
+             <div id="callScriptOut" class="whitespace-pre-wrap outline-none" contenteditable="true"></div>
+          </div>
         </div>
 
         <!-- Notes -->

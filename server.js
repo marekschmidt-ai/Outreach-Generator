@@ -2,8 +2,51 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { GoogleGenAI } = require('@google/genai');
+const mysql = require('mysql2/promise');
+const fs = require('fs');
 
 dotenv.config();
+
+// TiDB Connection Pool
+const pool = mysql.createPool({
+  host: process.env.TIDB_HOST,
+  port: process.env.TIDB_PORT,
+  user: process.env.TIDB_USER,
+  password: process.env.TIDB_PASSWORD,
+  database: process.env.TIDB_DATABASE,
+  ssl: {
+    minVersion: 'TLSv1.2',
+    rejectUnauthorized: true
+  },
+  connectionLimit: 1,
+  maxIdle: 1,
+  enableKeepAlive: true
+});
+
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS outreach_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        company_name VARCHAR(255),
+        linkedin_url VARCHAR(500),
+        linkedin_message TEXT,
+        email_subject VARCHAR(255),
+        email_body TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    try {
+      await pool.query('ALTER TABLE outreach_history ADD COLUMN why_tidb TEXT, ADD COLUMN call_script TEXT');
+    } catch (e) {
+      // Ignore if columns already exist
+    }
+    console.log('✅ TiDB Backend Database Initialized');
+  } catch (err) {
+    console.error('❌ Failed to initialize database:', err);
+  }
+}
+initDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +54,29 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+// Context Endpoints
+app.get('/api/context', (req, res) => {
+  try {
+    if (fs.existsSync('context.json')) {
+      const data = fs.readFileSync('context.json', 'utf8');
+      res.json(JSON.parse(data));
+    } else {
+      res.json({ gtmPlaybook: '', battleCard: '' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read context' });
+  }
+});
+
+app.post('/api/context', (req, res) => {
+  try {
+    fs.writeFileSync('context.json', JSON.stringify(req.body, null, 2));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to save context' });
+  }
+});
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -49,7 +115,7 @@ RULES:
 
 app.post('/api/generate', async (req, res) => {
   try {
-    const { linkedinUrl, extraNotes, gtmPlaybook, battleCard } = req.body;
+    const { companyName, linkedinUrl, extraNotes, gtmPlaybook, battleCard } = req.body;
 
     const userMessage = `CONTEXT - GTM PLAYBOOK:
 ${gtmPlaybook || 'None provided'}
@@ -58,15 +124,27 @@ CONTEXT - COMPETITIVE BATTLE CARD:
 ${battleCard || 'None provided'}
 
 LEAD INFORMATION:
+- Target Company: ${companyName}
 - LinkedIn Profile URL: ${linkedinUrl || 'N/A'}
 - Additional Notes: ${extraNotes || 'N/A'}
 
 INSTRUCTIONS:
-1. Identify the company from the profile URL or notes.
-2. Thoroughly search the web using Google Search Tools (company website, tech blogs, and specifically engineering job postings) to discover what datastores/technologies the company currently uses.
-3. Use the Competitive Battle Card to map their current tech stack to TiDB's distinct advantages.
-4. Draft the messaging to explicitly answer the question "why would they want to meet with us?" based on your findings.
-5. Return ONLY valid JSON block.`;
+1. The prospect works at "${companyName}". Use Google Search Tools to thoroughly research "${companyName}" (their company website, tech blogs, and specifically engineering job postings) to definitively discover what datastores/technologies they currently use. DO NOT guess the company name from the LinkedIn URL.
+2. Search aggressively for any database or scalability challenges "${companyName}" is facing in their engineering posts. Check the prospect's LinkedIn URL/notes for personal angles.
+3. Compare all of the information about their tech stack with the Competitive Battle Card. Give an explicit answer to the question: "Why would they want to speak with TiDB - where are we better?".
+4. Draft a proposed LinkedIn message, Email, and a Call Script that aggressively leverage these custom strategic findings.
+5. Return ONLY valid JSON block.
+{
+  "why_tidb": "Your explicit strategic analysis of why they need TiDB compared to their current stack...",
+  "personalization_notes": [
+    "Note 1: Company X relies on Aurora...",
+    "Note 2: Prospect is a VP of Eng..."
+  ],
+  "linkedin_message": "...",
+  "email_subject": "...",
+  "email_body": "...",
+  "call_script": "..."
+}`;
 
     let response;
     let retries = 3;
@@ -78,22 +156,35 @@ INSTRUCTIONS:
           contents: userMessage,
           config: {
             systemInstruction: SYSTEM_PROMPT,
-            tools: [{ googleSearch: {} }] // Rely on search grounding for live web signals
+            tools: [{ googleSearch: {} }],
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+            ]
           }
         });
+        if (!response.text) throw new Error("EMPTY_PAYLOAD");
         break;
       } catch (err) {
         retries--;
         console.error(`Attempt failed, ${retries} retries left. Error: ${err.message}`);
-        // Fallback model on the last attempt if primary is completely overloaded
-        if (retries === 0) {
-          console.log("Primary model utterly failed. Attempting fallback to gemini-2.0-flash-lite...");
+        // Fallback to pure generation without search grounding if Search API returns completely empty.
+        if (retries === 0 || err.message === "EMPTY_PAYLOAD") {
+          console.log("Primary model completely failed or returned empty payload. Attempting fallback to pure generation without search grounding...");
           response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-lite',
-            contents: userMessage,
+            model: 'gemini-2.5-flash',
+            contents: userMessage + "\n\n(Note: Live search failed or is inaccessible. Rely exclusively on your internal training data to estimate the company's tech stack).",
             config: {
               systemInstruction: SYSTEM_PROMPT,
-              tools: [{ googleSearch: {} }]
+              responseMimeType: "application/json",
+              safetySettings: [
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+              ]
             }
           });
           break;
@@ -104,9 +195,31 @@ INSTRUCTIONS:
     }
 
     const outputText = response.text;
-    // Strip potential markdown formatting if the model wraps the JSON
-    const cleanJSON = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
-    res.json(JSON.parse(cleanJSON));
+    if (!outputText) {
+      console.error('Safety block or empty response. Payload:', JSON.stringify(response));
+      return res.status(400).json({ error: 'Generation blocked by safety filters or returned empty.' });
+    }
+    
+    // Extract strictly the JSON object to bypass conversational preambles
+    let cleanJSON = outputText;
+    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanJSON = jsonMatch[0];
+    } else {
+      // Fallback standard strip
+      cleanJSON = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+    }
+    const finalJSON = JSON.parse(cleanJSON);
+
+    // Save strictly successfully generated artifacts into TiDB background
+    pool.query(
+      `INSERT INTO outreach_history (company_name, linkedin_url, why_tidb, linkedin_message, email_subject, email_body, call_script) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [companyName, linkedinUrl, finalJSON.why_tidb, finalJSON.linkedin_message, finalJSON.email_subject, finalJSON.email_body, finalJSON.call_script]
+    ).then(() => {
+      console.log(`✅ Saved generation for ${companyName} to TiDB`);
+    }).catch(dbErr => console.error('❌ Database save error:', dbErr));
+
+    res.json(finalJSON);
 
   } catch (error) {
     console.error('Error generating message:', error);
